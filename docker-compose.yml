@@ -1,0 +1,36 @@
+version: '3'
+services:
+  golang-server:
+    build: .
+    image: golang_dev
+    volumes:
+      - ./src:/go/src/app
+    ports:
+      - 8080:8080
+      - 4389:4389
+    networks:
+      - go-network
+    stdin_open: true
+    tty: true
+  mysql-server:
+    image: mysql:8.1.0 # You can change the MySQL version if needed
+    container_name: go-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - go-network
+volumes:
+  mysql_data:
+
+networks:
+  go-network:
+    driver: bridge
+
+
