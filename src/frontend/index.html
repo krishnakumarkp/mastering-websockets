@@ -46,7 +46,7 @@
         }
 
         function sendEvent(eventName, payload) {
-            const event = new Event(eventName, payLoad);
+            const event = new Event(eventName, payload);
             conn.send(JSON.stringify(event));
         }
 
@@ -63,8 +63,7 @@
         function sendMessage(){
             var newmessage = document.getElementById("message");
             if(newmessage != null)  {
-                sendEvent("send_message",newmessage.value)
-                
+                sendEvent("send_message",newmessage.value);
             }
             return false;
         }
@@ -79,6 +78,7 @@
                 conn = new WebSocket("ws://" + document.location.host+"/ws")
 
                 conn.onmessage = function(evt) {
+                    console.log(event)
                     const eventData = JSON.parse(evt.data)
                     const event = Object.assign(new Event, eventData);
                     routeEvent(event)
