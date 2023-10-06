@@ -8,6 +8,7 @@
     <div class="center">
         <h1>Amazing Chat Application</h1>
         <h3 id="chat-header">Currently in chat: general</h3>
+        <h3 id="connection-header">Connected to websocket: false</h3>
         <form id="chatroom-selection">
             <label for="chatroom">Chatroom:</label>
             <input type="text" id="chatroom" name="chatroom"><br><br>
@@ -21,9 +22,73 @@
             <input type="text" id="message" name="message"><br><br>
             <input type="submit" value="Send Message">
         </form>
+
+        <!-- login forn-->
+        <div style="border: 3px solic black; margin-top: 30px;">
+            <form id="login-form">
+                <label for="username">username: </label>
+                <input type="text" id="username" name="username"> <br>
+                <label for="password">passwrord: </label>
+                <input type="password" id="password" name="password"><br><br>
+                <input type="submit" value="Loin">
+            </form>
+        
+        </div>
     </div>
-    <script>
+    <script type="text/javascript">
+
         var selectedChat = "general";
+
+
+        function login() {
+            let formData = {
+                "username": document.getElementById("username").value,
+                "password": document.getElementById("password").value
+            }
+
+            fetch("login", {
+                method: 'post',
+                body: JSON.stringify(formData),
+                mode: 'cors',
+            }).then((response) => {
+                if(response.ok) {
+                    return response.json();
+                } else {
+                    throw 'unauthorized';
+                }
+            }).then((data)  => {
+                connectWebsocket(data.otp);
+            }).catch((e)=>{alert(e)});
+
+            return false;
+        }
+
+        function connectWebsocket(otp) {
+
+            if(window["WebSocket"]) {
+                console.log("supports websockets");
+                //connect to web socket
+                conn = new WebSocket("ws://" + document.location.host+"/ws?otp="+otp);
+
+                conn.onopen = function(evt) {
+                    document.getElementById("connection-header").innerHTML = "Connected to websocket: true";
+                }
+
+                conn.onclose = function(evt) {
+                    document.getElementById('connection-header').innerHTML = "Connected to websocket: false";
+                }
+
+                conn.onmessage = function(evt) {
+                    console.log(evt)
+                    const eventData = JSON.parse(evt.data)
+                    const event = Object.assign(new Event, eventData);
+                    routeEvent(event)
+                }
+            }else {
+                console.log("browser doesnot support websockets");
+            }
+
+        }
 
         class Event {
             constructor(type, payload) {
@@ -62,7 +127,7 @@
 
         function sendMessage(){
             var newmessage = document.getElementById("message");
-            if(newmessage != null)  {
+            if(newmessage != null && newmessage.value != "")  {
                 sendEvent("send_message",newmessage.value);
             }
             return false;
@@ -72,20 +137,7 @@
             document.getElementById("chatroom-selection").onsubmit = changeChatRoom
             document.getElementById("chatroom-message").onsubmit = sendMessage
 
-            if(window["WebSocket"]) {
-                console.log("supports websockets");
-                //connect to web socket
-                conn = new WebSocket("ws://" + document.location.host+"/ws")
-
-                conn.onmessage = function(evt) {
-                    console.log(event)
-                    const eventData = JSON.parse(evt.data)
-                    const event = Object.assign(new Event, eventData);
-                    routeEvent(event)
-                }
-            }else {
-                console.log("browser doesnot support websockets");
-            }
+            document.getElementById("login-form").onsubmit = login;
         }
 
     </script>
